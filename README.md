@@ -14,7 +14,7 @@ _ClojureGiven_ is an experimental library and not for production use yet.
 
 ## Example
 
-Here is a specification written in the ClojureGive framework:
+Here is a specification written in the ClojureGiven framework:
 
 <pre>
 (ns cljgiven.test.core
@@ -33,4 +33,6 @@ Here is a specification written in the ClojureGive framework:
            (When result2 (+ t2 x))
            (Then (= 2 result2))))
 </pre>
+
+
 
