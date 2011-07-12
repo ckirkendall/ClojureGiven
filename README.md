@@ -60,7 +60,7 @@ combination of setup methods and code in the test.
 In the example code above the preconditions are started with _Given_
 statements.  A top level _Given_ (that applies to the entire defspec
 block) says that two preconditions exist for a variable t1 & t2 
-with some dependent varaible of "_x_".
+with some dependent variable of "_x_".
 
 Note that "_x_" are not specified in the top level defspec
 block, but are given in each of the nested contexts.  By pushing the
