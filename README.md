@@ -23,14 +23,14 @@ Here is a specification written in the ClojureGiven framework:
 
 (defspec basic-spec 
   (Given [t1 (+ 1 x)
-          t2 (- 2 t1)])		;this is lazy
-  (Given! [y 3]) 		;this is not
+          t2 (- 2 t1)])           ;this is lazy
+  (Given! [y 3])                  ;this is not
   (Context "let us test t1"
-           (Given [x (+ 1 y)]) 	;this is lazy
+           (Given [x (+ 1 y)])    ;this is lazy
            (When result (+ 1 t1)) ;lazy Givens above evauated now
            (Then (= 6 result)))
   (Context "let us test t2"
-           (Given! [x (+ 1 3)]) ;not lazy
+           (Given! [x (+ 1 3)])   ;not lazy
            (When result2 (+ t2 x))
            (Then (= 2 result2))))
 </pre>
