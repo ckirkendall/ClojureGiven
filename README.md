@@ -128,3 +128,10 @@ After the related _When_ block is run, the value of result should be one.  If
 it is not one, the test will fail.
 
 
+## License
+
+Eclipse Public License 1.0, see http://opensource.org/licenses/eclipse-1.0.php.
+
+## Thanks
+
+[Jim Weirich](https://github.com/jimweirich) for creating rspec-given.
