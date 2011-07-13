@@ -36,7 +36,7 @@
 
 (defn process-context [givens message code]
   (let [lz-giv (process-givens code 'Given)
-        all-lz-giv (concat givens lz-giv)
+        all-lz-giv (concat lz-giv givens)
         nlz-giv (process-givens code 'Given!)
         whens (process-whens all-lz-giv code)]                        
     `(clojure.test/testing ~message 
@@ -46,8 +46,7 @@
 
 
 (defmacro defspec [sym & code] 
-  (concat `(clojure.test/deftest ~sym) 
-          `(~(process-context '() (str sym " -") code ))))
+  `(clojure.test/deftest ~sym ~(process-context '() (str sym " -") code )))
 
 
 
