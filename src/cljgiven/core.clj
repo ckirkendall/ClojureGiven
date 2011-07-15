@@ -3,29 +3,42 @@
 
 (def psudo-macros ['Given 'Given! 'When 'Context])
 
-(defn match-psudo [lst sym]
-  (and (list? lst) (= (first lst) sym)))
+(defn- match-psudo 
+  "identify a psudo macro call"
+  [item sym]
+  (and (list? item) (= (first item) sym)))
 
-(defn match-all-psudo [lst sym]
+(defn- match-all-psudo 
+  "all psudo macro calls identfied of a type in a block of code"
+  [lst sym]
   (filter #(match-psudo %1 sym) lst))
 
-(defn no-match-psudo [lst]
-  (or (not (list? lst))
-      (not-any? #(match-psudo lst %1) psudo-macros)))
+(defn- no-match-psudo [item]
+  "returns true if the lst is not a psudo macro call"
+  (or (not (list? item))
+      (not-any? #(match-psudo item %1) psudo-macros)))
 
-(defn process-givens [lst sym] 
+(defn- process-givens 
+  "used to identify all Give and Given! calls and 
+   return a concatnated vector of their contents"
+  [lst sym] 
   (reduce #(concat %1 (second %2)) [] (match-all-psudo lst sym)))
 
 
-(defn process-whens [givens lst]
+(defn- process-whens 
+  "used to identify first When call and returns a vector 
+   of its contents with the form [when (do ~@code)]"
+  [givens lst]
   (let [decon (fn [[sym vr & code]] (list vr (concat `(do) code)))
-        whens (reduce #(concat %1 (decon %2))
-                      [] (match-all-psudo lst 'When))]
-    (if (empty? whens) '()
-      (concat givens whens))))
+        whn (first (drop-while #(not (match-psudo %1 'When)) lst))]
+    (if (nil? whn) '()
+      (concat givens (decon whn)))))
 
 
-(defn process-all-else ([givens lst] (process-all-else givens lst []))
+(defn- process-all-else 
+  "once givens and whens are processed all other items including
+   sub contexts need to be processed."
+  ([givens lst] (process-all-else givens lst []))
   ([givens lst accum]
     (if (empty? lst) (seq accum)
       (let [con-func #(match-psudo %1 'Context)
@@ -40,7 +53,9 @@
           :else (recur givens rst accum))))))
                                           
 
-(defn process-context [givens message code]
+(defn- process-context 
+  "process a sub context"
+  [givens message code]
   (let [lz-giv (process-givens code 'Given)
         all-lz-giv (concat lz-giv givens)
         nlz-giv (process-givens code 'Given!)
@@ -51,9 +66,14 @@
                    ~(conj (process-all-else all-lz-giv code) `do))))))
 
 
-(defmacro defspec [sym & code] 
+(defmacro defspec 
+  "main macro for defing the spec if deligates to clojure.test/deftest
+   and then processes the rest of the content as a sub context"
+  [sym & code] 
   `(clojure.test/deftest ~sym ~(process-context '() (str sym " -") code )))
 
 
-(defmacro Then [& code] `(clojure.test/is ~@code))
+(defmacro Then 
+  "this is a alias for the clojure.test/is macro"
+  [& code] `(clojure.test/is ~@code))
 
