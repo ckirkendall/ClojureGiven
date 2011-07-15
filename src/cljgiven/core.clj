@@ -27,7 +27,7 @@
 
 (defn- process-whens 
   "used to identify first When call and returns a vector 
-   of its contents with the form [when (do ~@code)]"
+   of its contents with the form [var (do ~@code)]"
   [givens lst]
   (let [decon (fn [[sym vr & code]] (list vr (concat `(do) code)))
         whn (first (drop-while #(not (match-psudo %1 'When)) lst))]
