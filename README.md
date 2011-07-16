@@ -2,7 +2,7 @@
 
 Covering ClojureGiven, version 1.0.0-SNAPSHOT.
 
-ClojureGiven is a port of Jim Weirich's rspec-given BDD test framwork to Clojure. 
+ClojureGiven is a port of Jim Weirich's rspec-given BDD test framework to Clojure. 
 ClojureGiven is implemented on top of clojure.test through a
 set of macros that provide a basic Given/When/Then notation.  
 
@@ -27,7 +27,7 @@ Here is a specification written in the ClojureGiven framework:
   (Given! [y 3])                  ;this is not
   (Context "let us test t1"
            (Given [x (+ 1 y)])    ;this is lazy
-           (When result (+ 1 t1)) ;lazy Givens above evauated now
+           (When result (+ 1 t1)) ;lazy Givens above evaluated now
            (Then (= 6 result)))
   (Context "let us test t2"
            (Given! [x (+ 1 3)])   ;not lazy
@@ -83,7 +83,7 @@ After the preconditions in the given section are met,
 the when code block is run.
 
 There should only be one _When_ block for a given context. However, a
-_When_ in an outer context shoud be treated as a _Given_ in an inner
+_When_ in an outer context should be treated as a _Given_ in an inner
 context.  E.g.
 
 <pre>

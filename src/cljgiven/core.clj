@@ -25,13 +25,14 @@
   (reduce #(concat %1 (second %2)) [] (match-all-psudo lst sym)))
 
 
-(defn- process-whens 
+(defn- process-when 
   "used to identify first When call and returns a vector 
    of its contents with the form [var (do ~@code)]"
   [givens lst]
-  (let [decon (fn [[sym vr & code]] (list vr (concat `(do) code)))
+  (let [decon (fn [[sym vr & code]] `(~vr (do ~@code)))
         whn (first (drop-while #(not (match-psudo %1 'When)) lst))]
-    (if (nil? whn) '()
+    ;don't process givens if there is no when statement
+    (if (nil? whn) '() 
       (concat givens (decon whn)))))
 
 
@@ -45,24 +46,30 @@
             cur (first lst)
             rst (rest lst)]
         (cond
+          ;if its sub context process it
           (con-func cur) (let [[tmp msg & code1] cur
                                context (process-context givens msg code1)
                                new-accum (conj accum context)]
                            (recur givens rst new-accum))
-          (no-match-psudo cur) (recur givens rst (conj accum cur))
+          
+          ;if its not func call and its not something we already
+          ;processed just add it to the code block
+          (no-match-psudo cur) (recur givens rst (conj accum cur)) 
+          
+          ;if is something we already processed skip it
           :else (recur givens rst accum))))))
                                           
 
 (defn- process-context 
   "process a sub context"
   [givens message code]
-  (let [lz-giv (process-givens code 'Given)
-        all-lz-giv (concat lz-giv givens)
-        nlz-giv (process-givens code 'Given!)
-        whens (process-whens all-lz-giv code)]                        
+  (let [lz-giv (process-givens code 'Given)   ;vector lazy givens in this context
+        all-lz-giv (concat lz-giv givens)     ;lazy givens this context and parent
+        nlz-giv (process-givens code 'Given!) ;all non-lazy given this context
+        whn (process-when all-lz-giv code)]   ;when statement from this context                      
     `(clojure.test/testing ~message 
           (let ~(vec nlz-giv)
-             (let ~(vec whens)
+             (let ~(vec whn)
                    ~(conj (process-all-else all-lz-giv code) `do))))))
 
 
