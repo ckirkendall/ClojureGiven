@@ -9,18 +9,18 @@
   (and (list? item) (= (first item) sym)))
 
 (defn- match-all-psudo 
-  "all psudo macro calls identfied of a type in a block of code"
+  "all psudo macro calls identified of a type in a block of code"
   [lst sym]
   (filter #(match-psudo %1 sym) lst))
 
 (defn- no-match-psudo [item]
-  "returns true if the lst is not a psudo macro call"
+  "returns true if the item is not a psudo macro call"
   (or (not (list? item))
       (not-any? #(match-psudo item %1) psudo-macros)))
 
 (defn- process-givens 
   "used to identify all Give and Given! calls and 
-   return a concatnated vector of their contents"
+   return a concatenated vector of their contents"
   [lst sym] 
   (reduce #(concat %1 (second %2)) [] (match-all-psudo lst sym)))
 
