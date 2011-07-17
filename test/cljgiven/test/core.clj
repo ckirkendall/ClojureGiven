@@ -12,4 +12,24 @@
   (Context "let us test t2"
            (Given! [x (+ 1 3)])
            (When result2 (+ t2 x))
-           (Then (= 2 result2))))
+           (Then (= 2 result2)))) ;this test is designed to fail
+
+
+(defspec stack 
+  (Given [stack init-obj])
+  (Context "testing a vector as a stack"
+           (Given [init-obj [1 3]])
+           (When stack (conj stack 2)) ; push 2 on the stack
+           (Then (= 2 (peek stack)))
+           (Then (= [1 3 2] stack))
+           (Context "testing pop on a vecor"
+                    (When stack (pop stack))
+                    (Then (= [1 3] stack))))
+  (Context "testing a list as a stack"
+           (Given [init-obj '(1 3)])
+           (When stack (conj stack 2)) ; push 2 on the stack
+           (Then (= 2 (peek stack)))
+           (Then (= '( 2 1 3) stack))
+           (Context "testing pop on a list"
+                    (When stack (pop stack))
+                    (Then (= '(1 3) stack)))))
