@@ -63,7 +63,7 @@ FAIL in (basic-spec) (core.clj:15)
 basic-spec - let us test t2
 expected: (= 2 result2)
   actual: (not (= 2 1))
-Ran 1 tests containing 2 assertions.
+Ran 2 tests containing 8 assertions.
 1 failures, 0 errors.
 </pre>
 
