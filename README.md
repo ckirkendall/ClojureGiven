@@ -1,6 +1,6 @@
 # ClojureGiven
 
-Covering ClojureGiven, version 1.0.0-SNAPSHOT.
+Covering ClojureGiven, version 1.0.0.
 
 ClojureGiven is a port of Jim Weirich's rspec-given BDD test framework to Clojure. 
 ClojureGiven is implemented on top of clojure.test through a
@@ -10,7 +10,7 @@ set of macros that provide a basic Given/When/Then notation.
 
 ## Status
 
-_ClojureGiven_ is an experimental library and not for production use yet.
+_ClojureGiven_ is ready for production use.
 
 ## Example
 
