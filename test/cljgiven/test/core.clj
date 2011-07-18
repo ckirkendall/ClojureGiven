@@ -2,6 +2,8 @@
   (:use [cljgiven.core])
   (:use [clojure.test]))
 
+;simple test of basic structure
+
 (defspec basic-spec 
   (Given [t1 (+ 1 x)
           t2 (- 2 t1)])
@@ -15,6 +17,9 @@
            (Then (= 2 result2)))) ;this test is designed to fail
 
 
+;testing the sub context and the 
+;proper handling of of overriding
+;stack by a When
 (defspec stack 
   (Given [stack init-obj])
   (Context "testing a vector as a stack"
@@ -33,3 +38,5 @@
            (Context "testing pop on a list"
                     (When stack (pop stack))
                     (Then (= '(1 3) stack)))))
+
+
