@@ -6,6 +6,7 @@ ClojureGiven is a port of Jim Weirich's rspec-given BDD test framework to Clojur
 ClojureGiven is implemented on top of clojure.test through a
 set of macros that provide a basic Given/When/Then notation.  
 
+Download from clojars.org - [http://clojars.org/clojure-given](http://clojars.org/clojure-given)
 
 
 ## Status
