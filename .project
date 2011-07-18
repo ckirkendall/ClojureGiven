@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-  <name>cljgiven</name>
+  <name>clojure-given</name>
   <comment>test framework inspire by rspec-given </comment>
   <projects/>
   <buildSpec>
