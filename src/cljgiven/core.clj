@@ -1,101 +1,138 @@
 (ns cljgiven.core)
-(declare process-context)
+(declare get-syms)
+(declare suround-let)
+(declare set-re-exec)
 
-(def psudo-macros ['Given 'Given! 'When 'Context])
+;Map for looking up lazy accessor varables
+;Each test and creats a local binding for this 
+(def *clj-given* (atom {:global :holder}))
 
-(defn- match-psudo 
-  "identify a psudo macro call"
-  [item sym]
-  (and (list? item) (= (first item) sym)))
+;#######################################################
+; Primary Macros Given,Given!,When, Then
+;#######################################################
+(defmacro defspec  [sym & body] 
+  `(clojure.test/deftest ~sym 
+                         (binding [*clj-given* (atom {})]
+                           ~@body)))
 
-(defn- match-all-psudo 
-  "all psudo macro calls identified of a type in a block of code"
-  [lst sym]
-  (filter #(match-psudo %1 sym) lst))
+(defmacro Given [vect] 
+  "Creates a lazy accessor for variables" 
+  (seq (reduce #(conj %1 (conj %2 'set-given-var)) ['do] 
+          (partition 2 vect))))
 
-(defn- no-match-psudo [item]
-  "returns true if the item is not a psudo macro call"
-  (or (not (list? item))
-      (not-any? #(match-psudo item %1) psudo-macros)))
+(defmacro Given! [vect]
+  "Similar to Given but does not provide lazy eval"  
+  (seq (reduce #(conj %1 (conj %2 'set-given-var!)) ['do] 
+          (partition 2 vect))))
 
-(defn- process-givens 
-  "used to identify all Give and Given! calls and 
-   return a concatenated vector of their contents"
-  [lst sym] 
-  (reduce #(concat %1 (second %2)) [] (match-all-psudo lst sym)))
+(defmacro When [sym & body] 
+  "Allows the output of this block to be assigned to a 
+   symbol that can be used in your Then clause"
+  `(set-given-var! ~sym (do ~@body)))
 
-
-(defn- process-when 
-  "used to identify first When call and returns a vector 
-   of its contents with the form [var (do ~@code)]"
-  [givens lst]
-  (let [decon (fn [[sym vr & code]] `(~vr (do ~@code)))
-        whn (first (drop-while #(not (match-psudo %1 'When)) lst))]
-    ;don't process givens if there is no when statement
-    (if (nil? whn) '() 
-      (decon whn))))
-
-
-(defn- override-lazy-givens 
-  "removes the lazy givens that have been overriden by either
-   Give! or When"
-  [givens non-lazy-givens whn] 
-  (let [syms (set (filter #(symbol? %1) (concat non-lazy-givens whn)))]
-    (loop [lst givens  accum '()]
-      (if (empty? lst) accum
-        (let [vr (first lst)
-              code (second lst)]
-          (if (contains? syms vr) (recur (rest (rest lst)) accum)
-            (recur (rest (rest lst)) (concat accum (list vr code)))))))))
-           
-
-(defn- process-all-else 
-  "once givens and whens are processed all other items including
-   sub contexts need to be processed."
-  ([givens lst] (process-all-else givens lst []))
-  ([givens lst accum]
-    (if (empty? lst) (seq accum)
-      (let [con-func #(match-psudo %1 'Context)
-            cur (first lst)
-            rst (rest lst)]
-        (cond
-          ;if its sub context process it
-          (con-func cur) (let [[tmp msg & code1] cur
-                               context (process-context givens msg code1)
-                               new-accum (conj accum context)]
-                           (recur givens rst new-accum))
-          
-          ;if its not func call and its not something we already
-          ;processed just add it to the code block
-          (no-match-psudo cur) (recur givens rst (conj accum cur)) 
-          
-          ;if is something we already processed skip it
-          :else (recur givens rst accum))))))
-                                          
-
-(defn- process-context 
-  "process a sub context"
-  [givens message code]
-  (let [lz-giv (process-givens code 'Given)   ;vector lazy givens in this context
-        all-lz-giv (concat lz-giv givens)     ;lazy givens this context and parent
-        nlz-giv (process-givens code 'Given!) ;all non-lazy given this context
-        whn (process-when all-lz-giv code)    ;when statement from this context  
-        wg (if (empty? whn) '() (concat all-lz-giv whn))  ;bundle the givens and when together
-        new-givs (override-lazy-givens all-lz-giv nlz-giv whn)] ;remove the overriden givens for futur contexts                   
-    `(clojure.test/testing ~message 
-          (let ~(vec nlz-giv)
-             (let ~(vec wg)
-                   ~(conj (process-all-else new-givs code) `do))))))
+(defmacro Then [body]
+  "alias for the clojure.test macro 'is' that also
+   allows for access to Given, Given! and When vars"
+  `(eval (suround-let (quote (clojure.test/is ~body)))))    
+  
+(defmacro Context [msg & body]
+  "alias for clojure.text 'testing' also creats the 
+   local binding for Given vars"
+  `(clojure.test/testing ~msg 
+            (binding [*clj-given* (atom @*clj-given*)]
+              ~@body)))
 
 
-(defmacro defspec 
-  "main macro for defing the spec if deligates to clojure.test/deftest
-   and then processes the rest of the content as a sub context"
-  [sym & code] 
-  `(clojure.test/deftest ~sym ~(process-context '() (str sym " -") code )))
+;#######################################################
+; Helper functions and Macros 
+;#######################################################
+
+(defmacro get-given-var [sym]
+  "Helper macro that allows access to the given vars
+  fist checks to see if variable already has been 
+  evaluated and only evaluates if required"
+  `(let [var-map# @*clj-given*
+         sym-map# ((quote ~sym) var-map#) 
+	       val-exists# (:val-exists sym-map#)
+	       re-exec# (:re-exec sym-map#)] 
+     (if (or re-exec# (not val-exists#)) 
+       (do 
+         (let [new-val# (eval (suround-let (:func sym-map#)))
+               t1-sym-map# (assoc sym-map# :val new-val#)
+               t2-sym-map# (assoc t1-sym-map# :val-exists true)
+              new-sym-map# (assoc t2-sym-map# :re-exec false)]
+           (reset! *clj-given* (assoc var-map# (quote ~sym) new-sym-map#))
+           new-val#))
+       (:val sym-map#))))
+  
+(defmacro set-given-var [sym gval]
+  "Helper macro that registers a lazy accessor Given
+   in the context binding"
+  `(let [sym-map# {:val-exists false, 
+                   :func (quote (do ~gval)), 
+                   :re-exec true, 
+                   :type :given
+                   :syms (quote ~(set (get-syms gval)))}] 
+     (set-re-exec (quote ~sym))
+     (reset! *clj-given* (assoc @*clj-given* (quote ~sym) sym-map#))))
 
 
-(defmacro Then 
-  "this is a alias for the clojure.test/is macro"
-  [& code] `(clojure.test/is ~@code))
+(defmacro set-given-var! [sym gval]
+  "Helper macro that evaluates and sets the Given! vars
+   in the context binding"
+  `(let [sym-map# {:val-exists true, 
+                   :func nil, 
+                   :val (eval (suround-let (quote ~gval))), 
+                   :re-exec false, 
+                   :type :given!}]
+     (set-re-exec (quote ~sym))
+     (reset! *clj-given* (assoc @*clj-given* (quote ~sym) sym-map#))))
+
+
+(defn get-syms [ls] 
+  "get list of all the symbols for a block of code
+   used to determin if a lazy accessor should be 
+   re-evaluated"
+  (if (not ls) []
+    (let [sym-func (fn [lst item] 
+                     (cond
+                       (and (symbol? item) (not-any? #(= item %1) lst)) (conj lst item)
+                       (coll? item) (reduce  #(if (contains? (set %1) %2) %1 
+                                                (conj %1 %2)) lst  
+                                             (get-syms item))
+                       :else lst))]
+      (cond
+        (coll? ls) (reduce sym-func [] ls)
+        (symbol? ls) '(ls)
+        :else '()))))
+
+  
+(defn suround-let [& body]
+  "Helper function that surounds a block of 
+   code with let containing variables refrenced
+   in the block of code that have been registered
+   as Given, Given! or When blocks"
+  (let [syms (get-syms body)
+        var-vec (reduce 
+                  #(if (contains? @*clj-given* %2) 
+                     (concat %1 [%2 (list 'cljgiven.core/get-given-var %2)])
+                     %1) [] syms)]
+    `(let ~(vec var-vec)
+       ~@body)))
+
+
+(defn set-re-exec [sym]
+  "helper function that sets a lazy accessor back
+   to being re-evaluated. This is done anytime a variable
+   that is refrenced in its code block is overriden by
+   either a Given! or When"
+  (let [var-map @*clj-given*
+        kys (keys var-map)
+        fkys (filter #(contains? (:syms (%1 var-map)) sym) kys)]
+    (doseq [ky fkys]
+      (let [mp (assoc (var-map ky) :re-exec true)]
+       (reset! *clj-given* (assoc @*clj-given* ky mp))))))
+
+
+
 
