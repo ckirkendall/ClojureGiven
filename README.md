@@ -1,6 +1,6 @@
 # ClojureGiven
 
-Covering ClojureGiven, version 1.0.0.
+Covering ClojureGiven, version 1.1.0.
 
 ClojureGiven is a port of Jim Weirich's rspec-given BDD test framework to Clojure. 
 ClojureGiven is implemented on top of clojure.test through a
@@ -88,9 +88,11 @@ block, but are given in each of the nested contexts.  By pushing the
 definition of "_x_" into the nested contexts, we can vary
 it as needed for that particular context.
 
-A precondition in the form "(Given [var <expression>])" is lazily evaluated
-when the first When of current context or lower context is encountered.  If
-you want a non-lazy given, use "(Given! [var <expression>])".
+A precondition in the form "(Given [var <expression>])" creates a lazy
+accessor that is evaluated when the first refrence is encountered.  If
+any variable referenced in the expression the lazy accessor is will
+re-evaluate at the next reference.  If you want a non-lazy given, use 
+"(Given! [var <expression>])".
 
 The preconditions are run in order of definition.  Nested contexts
 will inherit the preconditions from the enclosing context, with out
