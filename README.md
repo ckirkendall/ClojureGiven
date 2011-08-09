@@ -89,7 +89,7 @@ definition of "_x_" into the nested contexts, we can vary
 it as needed for that particular context.
 
 A precondition in the form "(Given [var <expression>])" creates a lazy
-accessor that is evaluated when the first refrence is encountered.  If
+accessor that is evaluated when the first reference is encountered.  If
 any variable referenced in the expression the lazy accessor is will
 re-evaluate at the next reference.  If you want a non-lazy given, use 
 "(Given! [var <expression>])".
