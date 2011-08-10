@@ -31,8 +31,8 @@ Here is a specification written in the ClojureGiven framework:
            (Then (= 6 result)))
   (Context "let us test t2"
            (Given! [x (+ 1 3)])
-           (When result2 (+ t2 x))
-           (Then (= 2 result2)))) ;this test is designed to fail
+           (When result (+ t2 x))
+           (Then (= 2 result)))) ;this test is designed to fail
 
 
 (defspec stack 
@@ -62,7 +62,7 @@ Below is the output from "lein test"
 Testing cljgiven.test.core
 FAIL in (basic-spec) (core.clj:15)
 basic-spec - let us test t2
-expected: (= 2 result2)
+expected: (= 2 result)
   actual: (not (= 2 1))
 Ran 2 tests containing 8 assertions.
 1 failures, 0 errors.
