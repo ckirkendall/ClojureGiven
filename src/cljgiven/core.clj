@@ -2,6 +2,8 @@
 (declare get-syms)
 (declare suround-let)
 (declare set-re-exec)
+(declare set-given-var)
+(declare set-given-var!)
 
 ;Map for looking up lazy accessor varables
 ;Each test and creats a local binding for this 
