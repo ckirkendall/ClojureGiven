@@ -5,7 +5,7 @@
 
 ;Map for looking up lazy accessor varables
 ;Each test and creats a local binding for this 
-(def *clj-given* (atom {:global :holder}))
+(def ^:dynamic *clj-given* (atom {:global :holder}))
 
 ;#######################################################
 ; Primary Macros Given,Given!,When, Then
