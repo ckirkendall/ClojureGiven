@@ -2,10 +2,12 @@
 (declare get-syms)
 (declare suround-let)
 (declare set-re-exec)
+(declare set-given-var)
+(declare set-given-var!)
 
 ;Map for looking up lazy accessor varables
 ;Each test and creats a local binding for this 
-(def *clj-given* (atom {:global :holder}))
+(def ^:dynamic *clj-given* (atom {:global :holder}))
 
 ;#######################################################
 ; Primary Macros Given,Given!,When, Then
@@ -17,12 +19,12 @@
 
 (defmacro Given [vect] 
   "Creates a lazy accessor for variables" 
-  (seq (reduce #(conj %1 (conj %2 'set-given-var)) ['do] 
+  (seq (reduce #(conj %1 (conj %2 'cljgiven.core/set-given-var)) ['do]
           (partition 2 vect))))
 
 (defmacro Given! [vect]
   "Similar to Given but does not provide lazy eval"  
-  (seq (reduce #(conj %1 (conj %2 'set-given-var!)) ['do] 
+  (seq (reduce #(conj %1 (conj %2 'cljgiven.core/set-given-var!)) ['do]
           (partition 2 vect))))
 
 (defmacro When [sym & body] 
@@ -33,7 +35,7 @@
 (defmacro Then [body]
   "alias for the clojure.test macro 'is' that also
    allows for access to Given, Given! and When vars"
-  `(eval (suround-let (quote (clojure.test/is ~body)))))    
+  `(eval (suround-let (quote (clojure.test/is ~body)))))
   
 (defmacro Context [msg & body]
   "alias for clojure.text 'testing' also creats the 
